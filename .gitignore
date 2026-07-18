@@ -1,0 +1,36 @@
+# Dependency directories
+node_modules/
+
+# Production builds
+dist/
+out-tsc/
+build/
+
+# Local configuration files
+.env
+.env.local
+.env.*.local
+
+# Databases
+*.sqlite
+*.sqlite3
+*.db
+
+# Uploads and temporary files
+backend/uploads/
+tmp/
+temp/
+*.log
+
+# IDEs and Editors
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.swp
+
+# OS Files
+.DS_Store
+Thumbs.db
