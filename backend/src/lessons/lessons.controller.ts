@@ -1,4 +1,13 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  UseGuards,
+} from '@nestjs/common';
 import { LessonsService } from './lessons.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
@@ -7,6 +16,7 @@ import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { User } from '@prisma/client';
 
 @Controller('lessons')
 export class LessonsController {
@@ -15,7 +25,7 @@ export class LessonsController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.INSTRUCTOR)
-  create(@CurrentUser() user: any, @Body() createLessonDto: CreateLessonDto) {
+  create(@CurrentUser() user: User, @Body() createLessonDto: CreateLessonDto) {
     return this.lessonsService.create(createLessonDto, user.id);
   }
 
@@ -27,14 +37,18 @@ export class LessonsController {
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.INSTRUCTOR)
-  update(@CurrentUser() user: any, @Param('id') id: string, @Body() updateLessonDto: UpdateLessonDto) {
+  update(
+    @CurrentUser() user: User,
+    @Param('id') id: string,
+    @Body() updateLessonDto: UpdateLessonDto,
+  ) {
     return this.lessonsService.update(+id, updateLessonDto, user.id);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.INSTRUCTOR)
-  remove(@CurrentUser() user: any, @Param('id') id: string) {
+  remove(@CurrentUser() user: User, @Param('id') id: string) {
     return this.lessonsService.remove(+id, user.id);
   }
 }

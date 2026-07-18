@@ -4,24 +4,27 @@ import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
+import type { User } from '@prisma/client';
 
 @Controller('auth')
 export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  register(@Body() registerDto: RegisterDto) {
+  register(
+    @Body() registerDto: RegisterDto,
+  ): Promise<{ user: User; token: string }> {
     return this.authService.register(registerDto);
   }
 
   @Post('login')
-  login(@Body() loginDto: LoginDto) {
+  login(@Body() loginDto: LoginDto): Promise<{ user: User; token: string }> {
     return this.authService.login(loginDto);
   }
 
   @Get('me')
   @UseGuards(JwtAuthGuard)
-  getProfile(@CurrentUser() user: any) {
+  getProfile(@CurrentUser() user: User): User {
     return user;
   }
 }

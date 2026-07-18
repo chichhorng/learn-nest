@@ -61,9 +61,14 @@ export class DashboardService {
     for (const enrollment of enrollments) {
       if (Array.isArray(enrollment.completedLessons)) {
         totalCompletedLessons += enrollment.completedLessons.length;
-      } else if (enrollment.completedLessons && typeof enrollment.completedLessons === 'string') {
+      } else if (
+        enrollment.completedLessons &&
+        typeof enrollment.completedLessons === 'string'
+      ) {
         try {
-          const completedList = JSON.parse(enrollment.completedLessons);
+          const completedList = JSON.parse(
+            enrollment.completedLessons,
+          ) as unknown;
           if (Array.isArray(completedList)) {
             totalCompletedLessons += completedList.length;
           }

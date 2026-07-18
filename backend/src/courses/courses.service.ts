@@ -1,8 +1,13 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../lib/database/prisma.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { QueryCourseDto } from './dto/query-course.dto';
+import type { Prisma } from '@prisma/client';
 
 @Injectable()
 export class CoursesService {
@@ -25,7 +30,7 @@ export class CoursesService {
     const { search, category, level, sort, page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
-    const where: any = {};
+    const where: Prisma.CourseWhereInput = {};
 
     if (search) {
       where.OR = [
@@ -42,12 +47,21 @@ export class CoursesService {
       where.level = level;
     }
 
-    const orderBy: any = {};
+    let orderBy: Prisma.CourseOrderByWithRelationInput = { createdAt: 'desc' };
     if (sort) {
       const [field, order] = sort.split(':');
-      orderBy[field] = order || 'asc';
-    } else {
-      orderBy.createdAt = 'desc';
+      const sortOrder = order === 'desc' ? 'desc' : 'asc';
+      if (field === 'title') {
+        orderBy = { title: sortOrder };
+      } else if (field === 'price') {
+        orderBy = { price: sortOrder };
+      } else if (field === 'createdAt') {
+        orderBy = { createdAt: sortOrder };
+      } else if (field === 'avgRating') {
+        orderBy = { avgRating: sortOrder };
+      } else if (field === 'enrollCount') {
+        orderBy = { enrollCount: sortOrder };
+      }
     }
 
     return this.prisma.course.findMany({
@@ -94,7 +108,11 @@ export class CoursesService {
     return course;
   }
 
-  async update(id: number, updateCourseDto: UpdateCourseDto, instructorId?: number) {
+  async update(
+    id: number,
+    updateCourseDto: UpdateCourseDto,
+    instructorId?: number,
+  ) {
     const course = await this.findOne(id);
     if (instructorId && course.instructorId !== instructorId) {
       throw new ForbiddenException('You do not own this course');
@@ -103,7 +121,10 @@ export class CoursesService {
       where: { id },
       data: {
         ...updateCourseDto,
-        price: updateCourseDto.price !== undefined ? Number(updateCourseDto.price) : undefined,
+        price:
+          updateCourseDto.price !== undefined
+            ? Number(updateCourseDto.price)
+            : undefined,
       },
     });
   }

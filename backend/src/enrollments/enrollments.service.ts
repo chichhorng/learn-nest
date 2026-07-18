@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { PrismaService } from '../lib/database/prisma.service';
 import { UpdateProgressDto } from './dto/update-progress.dto';
 
@@ -82,9 +86,12 @@ export class EnrollmentsService {
     }
 
     let completedList: number[] = [];
-    if (enrollment.completedLessons && typeof enrollment.completedLessons === 'string') {
+    if (
+      enrollment.completedLessons &&
+      typeof enrollment.completedLessons === 'string'
+    ) {
       try {
-        completedList = JSON.parse(enrollment.completedLessons);
+        completedList = JSON.parse(enrollment.completedLessons) as number[];
       } catch {
         completedList = [];
       }
@@ -97,14 +104,17 @@ export class EnrollmentsService {
         completedList.push(Number(lessonId));
       }
     } else {
-      completedList = completedList.filter(id => id !== Number(lessonId));
+      completedList = completedList.filter((id) => id !== Number(lessonId));
     }
 
     const totalLessons = await this.prisma.lesson.count({
       where: { courseId: lesson.courseId },
     });
 
-    const progress = totalLessons > 0 ? Math.round((completedList.length / totalLessons) * 100) : 0;
+    const progress =
+      totalLessons > 0
+        ? Math.round((completedList.length / totalLessons) * 100)
+        : 0;
     const completedAt = progress === 100 ? new Date() : null;
 
     return this.prisma.enrollment.update({

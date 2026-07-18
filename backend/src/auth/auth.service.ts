@@ -1,9 +1,15 @@
-import { Injectable, UnauthorizedException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  UnauthorizedException,
+  BadRequestException,
+  ForbiddenException,
+} from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcryptjs';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
 import { UsersService } from '../users/users.service';
+import { User } from '@prisma/client';
 
 @Injectable()
 export class AuthService {
@@ -12,7 +18,9 @@ export class AuthService {
     private readonly jwtService: JwtService,
   ) {}
 
-  async register(registerDto: RegisterDto) {
+  async register(
+    registerDto: RegisterDto,
+  ): Promise<{ user: User; token: string }> {
     const existing = await this.usersService.findByEmail(registerDto.email);
     if (existing) {
       throw new BadRequestException('Email already registered');
@@ -22,6 +30,11 @@ export class AuthService {
       ...registerDto,
       password: hashedPassword,
     });
+    if (!(user as User & { isApproved: boolean }).isApproved) {
+      throw new ForbiddenException(
+        'Registration successful. Your instructor account is pending admin approval.',
+      );
+    }
     const payload = { sub: user.id, email: user.email, role: user.role };
     return {
       user,
@@ -29,7 +42,7 @@ export class AuthService {
     };
   }
 
-  async login(loginDto: LoginDto) {
+  async login(loginDto: LoginDto): Promise<{ user: User; token: string }> {
     const user = await this.usersService.findByEmail(loginDto.email);
     if (!user) {
       throw new UnauthorizedException('Invalid credentials');
@@ -37,6 +50,11 @@ export class AuthService {
     const isMatch = await bcrypt.compare(loginDto.password, user.password);
     if (!isMatch) {
       throw new UnauthorizedException('Invalid credentials');
+    }
+    if (!(user as User & { isApproved: boolean }).isApproved) {
+      throw new ForbiddenException(
+        'Your instructor account is pending admin approval.',
+      );
     }
     const payload = { sub: user.id, email: user.email, role: user.role };
     return {

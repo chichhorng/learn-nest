@@ -9,6 +9,7 @@ generator client {
 enum Role {
   student
   instructor
+  admin
 }
 
 enum CourseLevel {
@@ -29,6 +30,7 @@ model User {
   password  String
   name      String
   role      Role     @default(student)
+  isApproved Boolean  @default(true)
   avatar    String?
   bio       String?
   createdAt DateTime @default(now())

@@ -1,4 +1,8 @@
-import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  ForbiddenException,
+  NotFoundException,
+} from '@nestjs/common';
 import { PrismaService } from '../lib/database/prisma.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
@@ -42,15 +46,25 @@ export class LessonsService {
     return lesson;
   }
 
-  async update(id: number, updateLessonDto: UpdateLessonDto, instructorId: number) {
+  async update(
+    id: number,
+    updateLessonDto: UpdateLessonDto,
+    instructorId: number,
+  ) {
     const lesson = await this.findOne(id);
     await this.checkCourseOwnership(lesson.courseId, instructorId);
     return this.prisma.lesson.update({
       where: { id },
       data: {
         ...updateLessonDto,
-        order: updateLessonDto.order !== undefined ? Number(updateLessonDto.order) : undefined,
-        isFree: updateLessonDto.isFree !== undefined ? Boolean(updateLessonDto.isFree) : undefined,
+        order:
+          updateLessonDto.order !== undefined
+            ? Number(updateLessonDto.order)
+            : undefined,
+        isFree:
+          updateLessonDto.isFree !== undefined
+            ? Boolean(updateLessonDto.isFree)
+            : undefined,
       },
     });
   }

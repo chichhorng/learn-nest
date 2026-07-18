@@ -8,7 +8,7 @@ export class ReviewsService {
 
   async create(userId: number, createReviewDto: CreateReviewDto) {
     const courseId = Number(createReviewDto.courseId);
-    
+
     const course = await this.prisma.course.findUnique({
       where: { id: courseId },
     });
