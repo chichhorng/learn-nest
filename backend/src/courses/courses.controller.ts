@@ -7,6 +7,7 @@ import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
 
 @Controller('courses')
 export class CoursesController {
@@ -25,21 +26,21 @@ export class CoursesController {
   @Post()
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.INSTRUCTOR)
-  create(@Body() createCourseDto: CreateCourseDto) {
-    return this.coursesService.create(createCourseDto);
+  create(@CurrentUser() user: any, @Body() createCourseDto: CreateCourseDto) {
+    return this.coursesService.create(createCourseDto, user.id);
   }
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.INSTRUCTOR)
-  update(@Param('id') id: string, @Body() updateCourseDto: UpdateCourseDto) {
-    return this.coursesService.update(+id, updateCourseDto);
+  update(@CurrentUser() user: any, @Param('id') id: string, @Body() updateCourseDto: UpdateCourseDto) {
+    return this.coursesService.update(+id, updateCourseDto, user.id);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.INSTRUCTOR)
-  remove(@Param('id') id: string) {
-    return this.coursesService.remove(+id);
+  remove(@CurrentUser() user: any, @Param('id') id: string) {
+    return this.coursesService.remove(+id, user.id);
   }
 }

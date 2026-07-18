@@ -1,37 +1,65 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../lib/database/prisma.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
 
 @Injectable()
 export class LessonsService {
-  private lessons: any[] = [];
+  constructor(private readonly prisma: PrismaService) {}
 
-  create(createLessonDto: CreateLessonDto) {
-    const newLesson = { id: this.lessons.length + 1, ...createLessonDto };
-    this.lessons.push(newLesson);
-    return newLesson;
-  }
-
-  findOne(id: number) {
-    return this.lessons.find(l => l.id === id);
-  }
-
-  update(id: number, updateLessonDto: UpdateLessonDto) {
-    const lessonIndex = this.lessons.findIndex(l => l.id === id);
-    if (lessonIndex > -1) {
-      this.lessons[lessonIndex] = { ...this.lessons[lessonIndex], ...updateLessonDto };
-      return this.lessons[lessonIndex];
+  async checkCourseOwnership(courseId: number, instructorId: number) {
+    const course = await this.prisma.course.findUnique({
+      where: { id: courseId },
+    });
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${courseId} not found`);
     }
-    return null;
+    if (course.instructorId !== instructorId) {
+      throw new ForbiddenException('You do not own this course');
+    }
   }
 
-  remove(id: number) {
-    const lessonIndex = this.lessons.findIndex(l => l.id === id);
-    if (lessonIndex > -1) {
-      const removed = this.lessons[lessonIndex];
-      this.lessons.splice(lessonIndex, 1);
-      return removed;
+  async create(createLessonDto: CreateLessonDto, instructorId: number) {
+    await this.checkCourseOwnership(createLessonDto.courseId, instructorId);
+    return this.prisma.lesson.create({
+      data: {
+        title: createLessonDto.title,
+        content: createLessonDto.content,
+        order: Number(createLessonDto.order),
+        isFree: Boolean(createLessonDto.isFree),
+        courseId: createLessonDto.courseId,
+      },
+    });
+  }
+
+  async findOne(id: number) {
+    const lesson = await this.prisma.lesson.findUnique({
+      where: { id },
+    });
+    if (!lesson) {
+      throw new NotFoundException(`Lesson with ID ${id} not found`);
     }
-    return null;
+    return lesson;
+  }
+
+  async update(id: number, updateLessonDto: UpdateLessonDto, instructorId: number) {
+    const lesson = await this.findOne(id);
+    await this.checkCourseOwnership(lesson.courseId, instructorId);
+    return this.prisma.lesson.update({
+      where: { id },
+      data: {
+        ...updateLessonDto,
+        order: updateLessonDto.order !== undefined ? Number(updateLessonDto.order) : undefined,
+        isFree: updateLessonDto.isFree !== undefined ? Boolean(updateLessonDto.isFree) : undefined,
+      },
+    });
+  }
+
+  async remove(id: number, instructorId: number) {
+    const lesson = await this.findOne(id);
+    await this.checkCourseOwnership(lesson.courseId, instructorId);
+    return this.prisma.lesson.delete({
+      where: { id },
+    });
   }
 }

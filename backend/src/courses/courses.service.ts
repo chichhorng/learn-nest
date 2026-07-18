@@ -1,49 +1,120 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { PrismaService } from '../lib/database/prisma.service';
 import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { QueryCourseDto } from './dto/query-course.dto';
 
 @Injectable()
 export class CoursesService {
-  private courses: any[] = [];
+  constructor(private readonly prisma: PrismaService) {}
 
-  create(createCourseDto: CreateCourseDto) {
-    const newCourse = {
-      id: this.courses.length + 1,
-      ...createCourseDto,
-      lessons: [],
-      enrollCount: 0,
-      avgRating: 0,
-      createdAt: new Date(),
-    };
-    this.courses.push(newCourse);
-    return newCourse;
+  async create(createCourseDto: CreateCourseDto, instructorId: number) {
+    return this.prisma.course.create({
+      data: {
+        title: createCourseDto.title,
+        description: createCourseDto.description,
+        category: createCourseDto.category,
+        level: createCourseDto.level,
+        price: Number(createCourseDto.price),
+        instructorId: instructorId,
+      },
+    });
   }
 
-  findAll(query: QueryCourseDto) {
-    return this.courses;
-  }
+  async findAll(query: QueryCourseDto) {
+    const { search, category, level, sort, page = 1, limit = 10 } = query;
+    const skip = (page - 1) * limit;
 
-  findOne(id: number) {
-    return this.courses.find(c => c.id === id);
-  }
+    const where: any = {};
 
-  update(id: number, updateCourseDto: UpdateCourseDto) {
-    const courseIndex = this.courses.findIndex(c => c.id === id);
-    if (courseIndex > -1) {
-      this.courses[courseIndex] = { ...this.courses[courseIndex], ...updateCourseDto };
-      return this.courses[courseIndex];
+    if (search) {
+      where.OR = [
+        { title: { contains: search, mode: 'insensitive' } },
+        { description: { contains: search, mode: 'insensitive' } },
+      ];
     }
-    return null;
+
+    if (category) {
+      where.category = category;
+    }
+
+    if (level) {
+      where.level = level;
+    }
+
+    const orderBy: any = {};
+    if (sort) {
+      const [field, order] = sort.split(':');
+      orderBy[field] = order || 'asc';
+    } else {
+      orderBy.createdAt = 'desc';
+    }
+
+    return this.prisma.course.findMany({
+      where,
+      orderBy,
+      skip: Number(skip),
+      take: Number(limit),
+      include: {
+        instructor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+          },
+        },
+        lessons: true,
+      },
+    });
   }
 
-  remove(id: number) {
-    const courseIndex = this.courses.findIndex(c => c.id === id);
-    if (courseIndex > -1) {
-      const removed = this.courses[courseIndex];
-      this.courses.splice(courseIndex, 1);
-      return removed;
+  async findOne(id: number) {
+    const course = await this.prisma.course.findUnique({
+      where: { id },
+      include: {
+        instructor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            avatar: true,
+          },
+        },
+        lessons: {
+          orderBy: {
+            order: 'asc',
+          },
+        },
+      },
+    });
+    if (!course) {
+      throw new NotFoundException(`Course with ID ${id} not found`);
     }
-    return null;
+    return course;
+  }
+
+  async update(id: number, updateCourseDto: UpdateCourseDto, instructorId?: number) {
+    const course = await this.findOne(id);
+    if (instructorId && course.instructorId !== instructorId) {
+      throw new ForbiddenException('You do not own this course');
+    }
+    return this.prisma.course.update({
+      where: { id },
+      data: {
+        ...updateCourseDto,
+        price: updateCourseDto.price !== undefined ? Number(updateCourseDto.price) : undefined,
+      },
+    });
+  }
+
+  async remove(id: number, instructorId?: number) {
+    const course = await this.findOne(id);
+    if (instructorId && course.instructorId !== instructorId) {
+      throw new ForbiddenException('You do not own this course');
+    }
+    return this.prisma.course.delete({
+      where: { id },
+    });
   }
 }

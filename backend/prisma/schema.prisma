@@ -1,0 +1,100 @@
+datasource db {
+  provider = "postgresql"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  student
+  instructor
+}
+
+enum CourseLevel {
+  beginner
+  intermediate
+  advanced
+}
+
+enum CourseStatus {
+  draft
+  published
+  archived
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  email     String   @unique
+  password  String
+  name      String
+  role      Role     @default(student)
+  avatar    String?
+  bio       String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  courses     Course[]     @relation("InstructorCourses")
+  enrollments Enrollment[]
+  reviews     Review[]
+}
+
+model Course {
+  id          Int          @id @default(autoincrement())
+  title       String
+  description String
+  thumbnail   String?
+  category    String
+  level       CourseLevel  @default(beginner)
+  status      CourseStatus @default(draft)
+  price       Float        @default(0)
+  instructorId Int
+  instructor   User         @relation("InstructorCourses", fields: [instructorId], references: [id])
+  avgRating   Float        @default(0)
+  enrollCount Int          @default(0)
+  createdAt   DateTime     @default(now())
+  updatedAt   DateTime     @updatedAt
+
+  lessons     Lesson[]
+  enrollments Enrollment[]
+  reviews     Review[]
+}
+
+model Lesson {
+  id        Int      @id @default(autoincrement())
+  title     String
+  content   String?
+  videoUrl  String?
+  duration  Int      @default(0)
+  order     Int
+  isFree    Boolean  @default(false)
+  courseId  Int
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Enrollment {
+  id               Int       @id @default(autoincrement())
+  userId           Int
+  user             User      @relation(fields: [userId], references: [id])
+  courseId         Int
+  course           Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  progress         Int       @default(0)
+  completedLessons Json      @default("[]")
+  enrolledAt       DateTime  @default(now())
+  completedAt      DateTime?
+
+  @@unique([userId, courseId])
+}
+
+model Review {
+  id        Int      @id @default(autoincrement())
+  rating    Int
+  comment   String?
+  userId    Int
+  user      User     @relation(fields: [userId], references: [id])
+  courseId  Int
+  course    Course   @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+}

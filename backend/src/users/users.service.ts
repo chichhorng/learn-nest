@@ -1,30 +1,40 @@
 import { Injectable } from '@nestjs/common';
+import { PrismaService } from '../lib/database/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UsersService {
-  private users: any[] = [];
+  constructor(private readonly prisma: PrismaService) {}
 
   async create(data: any) {
-    const newUser = { id: this.users.length + 1, ...data, createdAt: new Date() };
-    this.users.push(newUser);
-    return newUser;
+    return this.prisma.user.create({
+      data: {
+        email: data.email,
+        name: data.name,
+        password: data.password,
+        role: data.role || 'student',
+        avatar: data.avatar,
+        bio: data.bio,
+      },
+    });
   }
 
   async findByEmail(email: string) {
-    return this.users.find(u => u.email === email);
+    return this.prisma.user.findUnique({
+      where: { email },
+    });
   }
 
   async findById(id: number) {
-    return this.users.find(u => u.id === id);
+    return this.prisma.user.findUnique({
+      where: { id },
+    });
   }
 
   async update(id: number, updateUserDto: UpdateUserDto) {
-    const userIndex = this.users.findIndex(u => u.id === id);
-    if (userIndex > -1) {
-      this.users[userIndex] = { ...this.users[userIndex], ...updateUserDto };
-      return this.users[userIndex];
-    }
-    return null;
+    return this.prisma.user.update({
+      where: { id },
+      data: updateUserDto,
+    });
   }
 }
