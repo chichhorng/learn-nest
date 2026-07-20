@@ -1,0 +1,368 @@
+@if (isLoading()) {
+  <!-- Loading spinner -->
+  <div class="min-h-[60vh] flex items-center justify-center">
+    <div class="flex flex-col items-center gap-3">
+      <svg class="animate-spin h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+      </svg>
+      <span class="text-muted-foreground text-sm font-semibold">Loading course details...</span>
+    </div>
+  </div>
+} @else if (course(); as courseData) {
+  <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 py-6">
+    <!-- Left Column (Span 8) -->
+    <div class="lg:col-span-8 space-y-8">
+      <!-- Course Main Header -->
+      <div class="space-y-4">
+        <div class="flex items-center gap-2">
+          <span class="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
+            {{ courseData.category }}
+          </span>
+          <span class="bg-muted text-muted-foreground px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider">
+            {{ courseData.level }}
+          </span>
+        </div>
+        <h1 class="text-3xl md:text-5xl font-extrabold tracking-tight text-foreground leading-tight">
+          {{ courseData.title }}
+        </h1>
+        <p class="text-muted-foreground text-base md:text-lg leading-relaxed">
+          {{ courseData.description }}
+        </p>
+
+        <!-- Course Header Info -->
+        <div class="flex flex-wrap items-center gap-4 text-sm text-muted-foreground pt-2">
+          <!-- Rating -->
+          <div class="flex items-center gap-1">
+            <app-star-rating [rating]="courseData.avgRating" size="md"></app-star-rating>
+            <span class="text-foreground font-bold text-sm">{{ courseData.avgRating | number:'1.1-1' }}</span>
+          </div>
+          <span>•</span>
+          <span>{{ courseData.enrollCount }} students enrolled</span>
+          <span>•</span>
+          <span>Created by <span class="text-foreground font-semibold">{{ courseData.instructor?.name }}</span></span>
+        </div>
+      </div>
+
+      <!-- Syllabus Curriculum list -->
+      <div class="space-y-4">
+        <h2 class="text-2xl font-bold text-foreground">Course Curriculum</h2>
+        <div class="border border-border rounded-xl bg-card overflow-hidden shadow-sm">
+          @if (!courseData.lessons || courseData.lessons.length === 0) {
+            <p class="p-6 text-center text-muted-foreground text-sm">No lessons have been added to this curriculum yet.</p>
+          } @else {
+            <div class="divide-y divide-border">
+              @for (lesson of courseData.lessons; track lesson.id; let idx = $index) {
+                <div class="p-4 flex items-center justify-between hover:bg-muted/30 transition-colors">
+                  <div class="flex items-center gap-3">
+                    <!-- Lesson Order Index -->
+                    <span class="w-6 text-sm font-semibold text-muted-foreground text-center">{{ idx + 1 }}</span>
+                    <!-- Video Icon -->
+                    <svg class="w-5 h-5 text-muted-foreground shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <span class="text-sm font-semibold text-foreground">{{ lesson.title }}</span>
+                  </div>
+                  
+                  <div class="flex items-center gap-3">
+                    @if (lesson.isFree) {
+                      <span class="bg-emerald-500/10 text-emerald-500 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider">
+                        Free Preview
+                      </span>
+                    }
+                    <span class="text-xs text-muted-foreground font-medium">{{ lesson.duration }} min</span>
+                  </div>
+                </div>
+              }
+            </div>
+          }
+        </div>
+      </div>
+
+      <!-- Instructor Bio Section -->
+      <div class="space-y-4">
+        <h2 class="text-2xl font-bold text-foreground">Meet Your Instructor</h2>
+        <div class="p-6 bg-card border border-border rounded-xl shadow-sm flex flex-col md:flex-row gap-6 items-start">
+          <div class="w-16 h-16 rounded-full bg-primary/10 text-primary flex items-center justify-center shrink-0 border border-border overflow-hidden">
+            @if (courseData.instructor?.avatar) {
+              <img [src]="courseData.instructor?.avatar" alt="Avatar" class="w-full h-full object-cover" />
+            } @else {
+              <svg class="w-8 h-8" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+              </svg>
+            }
+          </div>
+          <div class="space-y-2">
+            <h3 class="text-lg font-bold text-foreground">{{ courseData.instructor?.name }}</h3>
+            <p class="text-sm text-muted-foreground leading-relaxed">
+              {{ courseData.instructor?.bio || 'An experienced instructor dedicated to sharing knowledge and helping students grow in their technical careers.' }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Reviews list -->
+      <div class="space-y-4">
+        <h2 class="text-2xl font-bold text-foreground">Student Feedback</h2>
+
+        <!-- Review Submission Form -->
+        @if (isEnrolled() && !hasReviewed()) {
+          <div class="p-6 bg-card border border-border rounded-xl shadow-sm space-y-4">
+            <h3 class="text-base font-bold text-foreground">Write a Review</h3>
+            <form [formGroup]="reviewForm" (ngSubmit)="submitReview()" class="space-y-4">
+              <!-- Stars Selector -->
+              <div class="space-y-1.5">
+                <label class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Rating</label>
+                <div class="flex items-center gap-1">
+                  @for (starNum of [1, 2, 3, 4, 5]; track starNum) {
+                    <button
+                      type="button"
+                      (click)="reviewForm.patchValue({ rating: starNum })"
+                      class="text-amber-500 hover:scale-110 transition-transform focus:outline-none cursor-pointer"
+                    >
+                      <svg
+                        class="w-7 h-7"
+                        [class.fill-current]="reviewForm.controls.rating.value >= starNum"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                        stroke-width="2"
+                      >
+                        <path
+                          stroke-linecap="round"
+                          stroke-linejoin="round"
+                          d="M11.049 2.927c.3-.921 1.603-.921 1.902 0l1.519 4.674a1 1 0 00.95.69h4.907c.969 0 1.371 1.24.588 1.81l-3.976 2.888a1 1 0 00-.363 1.118l1.518 4.674c.3.922-.755 1.688-1.538 1.118l-3.976-2.888a1 1 0 00-1.176 0l-3.976 2.888c-.783.57-1.838-.197-1.538-1.118l1.518-4.674a1 1 0 00-.363-1.118l-3.976-2.888c-.784-.57-.38-1.81.588-1.81h4.906a1 1 0 00.95-.69l1.519-4.674z"
+                        />
+                      </svg>
+                    </button>
+                  }
+                </div>
+              </div>
+
+              <!-- Comment Input -->
+              <div class="space-y-1.5">
+                <label for="comment" class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Your Comment</label>
+                <textarea
+                  id="comment"
+                  rows="3"
+                  formControlName="comment"
+                  placeholder="Share your thoughts on the course material and instructor..."
+                  class="w-full px-3 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground text-sm"
+                ></textarea>
+                @if (reviewForm.controls.comment.invalid && reviewForm.controls.comment.touched) {
+                  <p class="text-xs text-destructive font-semibold">Please write a comment before submitting.</p>
+                }
+              </div>
+
+              <!-- Submit Button -->
+              <div class="flex justify-end">
+                <button
+                  type="submit"
+                  [disabled]="reviewForm.invalid || isSubmittingReview()"
+                  class="px-4 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-lg shadow text-xs transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  @if (isSubmittingReview()) {
+                    <svg class="animate-spin h-4 w-4 text-primary-foreground" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                    <span>Submitting...</span>
+                  } @else {
+                    <span>Submit Review</span>
+                  }
+                </button>
+              </div>
+            </form>
+          </div>
+        }
+
+        @if (!courseData.reviews || courseData.reviews.length === 0) {
+          <div class="p-6 text-center bg-card border border-border rounded-xl text-muted-foreground text-sm shadow-sm">
+            No reviews have been left for this course yet.
+          </div>
+        } @else {
+          <div class="space-y-4">
+            @for (rev of courseData.reviews; track rev.id) {
+              <div class="p-5 bg-card border border-border rounded-xl shadow-sm space-y-3">
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center gap-3">
+                    <div class="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center font-bold text-xs border border-border">
+                      {{ rev.user?.name ? rev.user?.name?.substring(0, 2)?.toUpperCase() : 'ST' }}
+                    </div>
+                    <div>
+                      <h4 class="text-sm font-bold text-foreground">{{ rev.user?.name || 'Student' }}</h4>
+                      <app-star-rating [rating]="rev.rating" size="xs"></app-star-rating>
+                    </div>
+                  </div>
+                </div>
+                <p class="text-sm text-muted-foreground leading-relaxed italic">
+                  "{{ rev.comment }}"
+                </p>
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- Right Column (Span 4) - Course Side Purchase Card -->
+    <div class="lg:col-span-4 lg:sticky lg:top-20 h-fit space-y-6">
+      <div class="bg-card border border-border rounded-xl shadow-md p-6 space-y-6">
+        <!-- Thumbnail -->
+        <div class="relative w-full h-44 bg-muted rounded-lg overflow-hidden flex items-center justify-center border border-border">
+          @if (courseData.thumbnail) {
+            <img [src]="courseData.thumbnail" alt="Course Cover" class="w-full h-full object-cover" />
+          } @else {
+            <svg class="w-16 h-16 text-primary opacity-40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          }
+        </div>
+
+        <!-- Pricing -->
+        <div class="space-y-1">
+          <span class="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Course Price</span>
+          <div class="flex items-baseline gap-2">
+            @if (courseData.price === 0) {
+              <span class="text-3xl font-extrabold text-emerald-500">Free</span>
+            } @else {
+              <span class="text-3xl font-extrabold text-foreground">${{ courseData.price | number:'1.2-2' }}</span>
+            }
+          </div>
+        </div>
+
+        <!-- Call To Actions -->
+        <div>
+          @if (authService.currentUser()?.role === 'admin') {
+            <a
+              [routerLink]="['/classroom', courseData.id]"
+              class="w-full py-3 px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-lg text-center shadow transition-all block cursor-pointer select-none"
+            >
+              Enter Classroom (Admin View)
+            </a>
+          } @else if (isEnrolled()) {
+            <a
+              [routerLink]="['/classroom', courseData.id]"
+              class="w-full py-3 px-4 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg text-center shadow transition-all block cursor-pointer select-none"
+            >
+              Go to Classroom
+            </a>
+          } @else {
+            <button
+              (click)="enroll()"
+              [disabled]="isEnrolling()"
+              class="w-full py-3 px-4 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-lg text-center shadow transition-all flex justify-center items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              @if (isEnrolling()) {
+                <svg class="animate-spin h-5 w-5 text-primary-foreground" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Enrolling...</span>
+              } @else {
+                <span>Enroll Now</span>
+              }
+            </button>
+          }
+        </div>
+
+        <!-- Admin Moderation Controls -->
+        @if (authService.currentUser()?.role === 'admin') {
+          <div class="space-y-3 pt-4 border-t border-border">
+            <h4 class="font-bold text-sm text-foreground">Admin Moderation:</h4>
+            
+            <div class="flex flex-col gap-2">
+              @if (courseData.status === 'published') {
+                <button
+                  (click)="updateStatus('draft')"
+                  [disabled]="isUpdatingStatus()"
+                  class="w-full py-2 px-3 border border-amber-500 text-amber-500 hover:bg-amber-500/10 font-semibold rounded-lg text-sm text-center transition-all cursor-pointer flex justify-center items-center gap-1.5"
+                >
+                  @if (isUpdatingStatus()) {
+                    <svg class="animate-spin h-4 w-4 text-amber-500" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  }
+                  <span>Restage (Set to Draft)</span>
+                </button>
+                
+                <button
+                  (click)="updateStatus('archived')"
+                  [disabled]="isUpdatingStatus()"
+                  class="w-full py-2 px-3 bg-destructive hover:bg-destructive/90 text-destructive-foreground font-bold rounded-lg text-sm text-center transition-all cursor-pointer flex justify-center items-center gap-1.5 shadow-sm"
+                >
+                  @if (isUpdatingStatus()) {
+                    <svg class="animate-spin h-4 w-4 text-destructive-foreground" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  }
+                  <span>Ban Course (Archive)</span>
+                </button>
+              } @else if (courseData.status === 'draft') {
+                <button
+                  (click)="updateStatus('published')"
+                  [disabled]="isUpdatingStatus()"
+                  class="w-full py-2 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg text-sm text-center transition-all cursor-pointer flex justify-center items-center gap-1.5 shadow-sm"
+                >
+                  @if (isUpdatingStatus()) {
+                    <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  }
+                  <span>Publish Course</span>
+                </button>
+              } @else if (courseData.status === 'archived') {
+                <div class="p-3 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-xs font-semibold text-center mb-2">
+                  Banned (Archived) by Moderation
+                </div>
+                
+                <button
+                  (click)="updateStatus('published')"
+                  [disabled]="isUpdatingStatus()"
+                  class="w-full py-2 px-3 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-lg text-sm text-center transition-all cursor-pointer flex justify-center items-center gap-1.5 shadow-sm"
+                >
+                  @if (isUpdatingStatus()) {
+                    <svg class="animate-spin h-4 w-4 text-white" fill="none" viewBox="0 0 24 24">
+                      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                    </svg>
+                  }
+                  <span>Unban (Publish)</span>
+                </button>
+              }
+            </div>
+          </div>
+        }
+
+        <!-- Specifications list -->
+        <div class="space-y-4 pt-4 border-t border-border">
+          <h4 class="font-bold text-sm text-foreground">This course includes:</h4>
+          <ul class="space-y-2.5 text-sm text-muted-foreground">
+            <li class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+              </svg>
+              <span>{{ courseData.lessons?.length || 0 }} on-demand video lessons</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              <span>Self-paced study environment</span>
+            </li>
+            <li class="flex items-center gap-2.5">
+              <svg class="w-4 h-4 text-primary shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              <span>Full lifetime access to curriculum</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </div>
+  </div>
+}

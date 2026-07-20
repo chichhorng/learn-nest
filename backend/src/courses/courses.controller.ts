@@ -51,7 +51,7 @@ export class CoursesController {
 
   @Put(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.INSTRUCTOR)
+  @Roles(Role.INSTRUCTOR, Role.ADMIN)
   update(
     @CurrentUser() user: User,
     @Param('id', ParseIntPipe) id: number,
@@ -62,7 +62,7 @@ export class CoursesController {
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
-  @Roles(Role.INSTRUCTOR)
+  @Roles(Role.INSTRUCTOR, Role.ADMIN)
   remove(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
     return this.coursesService.remove(id, user.id, user.role);
   }

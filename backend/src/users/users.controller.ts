@@ -2,6 +2,7 @@ import {
   Controller,
   Get,
   Put,
+  Delete,
   Param,
   Body,
   UseGuards,
@@ -10,6 +11,7 @@ import {
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { Roles } from '../common/decorators/roles.decorator';
@@ -55,5 +57,34 @@ export class UsersController {
   async approveInstructor(@Param('id', ParseIntPipe) id: number) {
     const approved = await this.usersService.approveInstructor(id);
     return sanitizeUser(approved);
+  }
+
+  @Get()
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  async getAllUsers() {
+    const users = await this.usersService.findAll();
+    return users.map(sanitizeUser);
+  }
+
+  @Delete(':id')
+  @UseGuards(RolesGuard)
+  @Roles(Role.ADMIN)
+  async deleteUser(@Param('id', ParseIntPipe) id: number) {
+    const deleted = await this.usersService.remove(id);
+    return sanitizeUser(deleted);
+  }
+
+  @Put('profile/password')
+  async changePassword(
+    @CurrentUser() user: User,
+    @Body() changePasswordDto: ChangePasswordDto,
+  ) {
+    await this.usersService.updatePassword(
+      user.id,
+      changePasswordDto.currentPassword,
+      changePasswordDto.newPassword,
+    );
+    return { message: 'Password updated successfully' };
   }
 }

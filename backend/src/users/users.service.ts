@@ -1,8 +1,9 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, BadRequestException } from '@nestjs/common';
 import { PrismaService } from '../lib/database/prisma.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { Role } from '../common/enums/role.enum';
 import type { User } from '@prisma/client';
+import * as bcrypt from 'bcryptjs';
 
 export interface CreateUserDto {
   email: string;
@@ -45,6 +46,17 @@ export class UsersService {
   }
 
   async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
+    if (updateUserDto.email) {
+      const existing = await this.prisma.user.findUnique({
+        where: { email: updateUserDto.email },
+      });
+      if (existing && existing.id !== id) {
+        throw new BadRequestException(
+          'Email is already in use by another account',
+        );
+      }
+    }
+
     return this.prisma.user.update({
       where: { id },
       data: updateUserDto,
@@ -64,6 +76,57 @@ export class UsersService {
     return this.prisma.user.update({
       where: { id },
       data: { isApproved: true },
+    });
+  }
+
+  async findAll(): Promise<User[]> {
+    return this.prisma.user.findMany();
+  }
+
+  async remove(id: number): Promise<User> {
+    const courses = await this.prisma.course.findMany({
+      where: { instructorId: id },
+    });
+    for (const course of courses) {
+      await this.prisma.course.delete({
+        where: { id: course.id },
+      });
+    }
+
+    await this.prisma.enrollment.deleteMany({
+      where: { userId: id },
+    });
+
+    await this.prisma.review.deleteMany({
+      where: { userId: id },
+    });
+
+    return this.prisma.user.delete({
+      where: { id },
+    });
+  }
+
+  async updatePassword(
+    id: number,
+    currentPass: string,
+    newPass: string,
+  ): Promise<User> {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+    });
+    if (!user) {
+      throw new BadRequestException('User not found');
+    }
+
+    const isMatch = await bcrypt.compare(currentPass, user.password);
+    if (!isMatch) {
+      throw new BadRequestException('Incorrect current password');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPass, 10);
+    return this.prisma.user.update({
+      where: { id },
+      data: { password: hashedPassword },
     });
   }
 }

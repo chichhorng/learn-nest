@@ -1,0 +1,205 @@
+<div class="max-w-4xl mx-auto py-6 space-y-6">
+  <!-- Header -->
+  <div class="flex items-center justify-between">
+    <div>
+      <h1 class="text-3xl font-extrabold tracking-tight text-foreground">
+        {{ courseId() ? 'Edit Course Details' : 'Create a New Course' }}
+      </h1>
+      <p class="text-muted-foreground mt-1 text-sm">
+        {{ courseId() ? 'Update your course branding, level, pricing, and status settings.' : 'List a new learning track and start building your syllabus.' }}
+      </p>
+    </div>
+    <a routerLink="/dashboard" class="text-xs font-semibold text-primary hover:underline">
+      ← Back to Console
+    </a>
+  </div>
+
+  @if (isLoading()) {
+    <div class="min-h-[40vh] flex items-center justify-center">
+      <div class="flex flex-col items-center gap-3">
+        <svg class="animate-spin h-10 w-10 text-primary" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+        </svg>
+        <span class="text-muted-foreground text-sm font-semibold">Loading details...</span>
+      </div>
+    </div>
+  } @else {
+    <div class="bg-card border border-border rounded-xl shadow-sm overflow-hidden p-6 md:p-8">
+      @if (errorMessage()) {
+        <div class="mb-6 p-4 bg-destructive/10 border border-destructive/20 text-destructive rounded-lg text-sm flex items-center gap-2">
+          <svg class="w-5 h-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+          </svg>
+          <span>{{ errorMessage() }}</span>
+        </div>
+      }
+
+      <form [formGroup]="courseForm" (ngSubmit)="onSubmit()" class="grid grid-cols-1 md:grid-cols-12 gap-8">
+        <!-- Left Panel: Thumbnail Preview (Span 4) -->
+        <div class="md:col-span-4 flex flex-col items-center gap-4 border-b md:border-b-0 md:border-r border-border pb-6 md:pb-0 md:pr-8">
+          <span class="text-sm font-semibold text-foreground">Course Thumbnail Preview</span>
+          <div class="relative w-full h-44 bg-muted rounded-lg overflow-hidden flex items-center justify-center border border-border/80 shadow-sm">
+            @if (courseForm.value.thumbnail) {
+              <img
+                [src]="courseForm.value.thumbnail"
+                alt="Thumbnail Preview"
+                class="w-full h-full object-cover"
+                #thumbImg
+                (error)="thumbImg.style.display = 'none'; fallbackIcon.style.display = 'block'"
+              />
+            }
+            <svg
+              #fallbackIcon
+              [style.display]="courseForm.value.thumbnail ? 'none' : 'block'"
+              class="w-16 h-16 text-primary opacity-40"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              stroke-width="1.5"
+            >
+              <path stroke-linecap="round" stroke-linejoin="round" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+            </svg>
+          </div>
+          <p class="text-xs text-muted-foreground text-center max-w-[200px]">
+            Thumbnail URLs are editable only in edit details mode. Leave empty to display a category icon.
+          </p>
+        </div>
+
+        <!-- Right Panel: Course Inputs (Span 8) -->
+        <div class="md:col-span-8 space-y-6">
+          <!-- Title -->
+          <div class="space-y-1.5">
+            <label for="title" class="text-sm font-bold text-foreground">Course Title</label>
+            <input
+              id="title"
+              type="text"
+              formControlName="title"
+              placeholder="e.g. Master NestJS Backend Development"
+              class="w-full px-3 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground text-sm"
+            />
+            @if (courseForm.controls.title.invalid && courseForm.controls.title.touched) {
+              <p class="text-xs text-destructive">Course title must be at least 2 characters.</p>
+            }
+          </div>
+
+          <!-- Description -->
+          <div class="space-y-1.5">
+            <label for="description" class="text-sm font-bold text-foreground">Brief Description</label>
+            <textarea
+              id="description"
+              rows="4"
+              formControlName="description"
+              placeholder="Provide a comprehensive summary of what students will achieve in this course..."
+              class="w-full px-3 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground text-sm"
+            ></textarea>
+            @if (courseForm.controls.description.invalid && courseForm.controls.description.touched) {
+              <p class="text-xs text-destructive">Description is required.</p>
+            }
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Category -->
+            <div class="space-y-1.5">
+              <label for="category" class="text-sm font-bold text-foreground">Category</label>
+              <select
+                id="category"
+                formControlName="category"
+                class="w-full px-3 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground text-sm cursor-pointer"
+              >
+                @for (cat of categories; track cat) {
+                  <option [value]="cat">{{ cat }}</option>
+                }
+              </select>
+            </div>
+
+            <!-- Level -->
+            <div class="space-y-1.5">
+              <label for="level" class="text-sm font-bold text-foreground">Level</label>
+              <select
+                id="level"
+                formControlName="level"
+                class="w-full px-3 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground text-sm cursor-pointer"
+              >
+                <option value="beginner">Beginner</option>
+                <option value="intermediate">Intermediate</option>
+                <option value="advanced">Advanced</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Price -->
+            <div class="space-y-1.5">
+              <label for="price" class="text-sm font-bold text-foreground">Price (USD)</label>
+              <input
+                id="price"
+                type="number"
+                min="0"
+                formControlName="price"
+                placeholder="0 for Free"
+                class="w-full px-3 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground text-sm"
+              />
+              @if (courseForm.controls.price.invalid && courseForm.controls.price.touched) {
+                <p class="text-xs text-destructive">Price cannot be negative.</p>
+              }
+            </div>
+
+            <!-- Status (Show only when editing details) -->
+            <div class="space-y-1.5">
+              <label for="status" class="text-sm font-bold text-foreground">Status</label>
+              <select
+                id="status"
+                formControlName="status"
+                class="w-full px-3 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary text-foreground text-sm cursor-pointer disabled:opacity-50"
+              >
+                <option value="draft">Draft (Private)</option>
+                <option value="published">Published (Public Catalog)</option>
+                <option value="archived">Archived (Hidden)</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Thumbnail URL (Show only when editing details) -->
+          @if (courseId()) {
+            <div class="space-y-1.5">
+              <label for="thumbnail" class="text-sm font-bold text-foreground">Thumbnail Cover Link</label>
+              <input
+                id="thumbnail"
+                type="text"
+                formControlName="thumbnail"
+                placeholder="https://example.com/thumbnail.jpg"
+                class="w-full px-3 py-2 bg-background border border-input rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent text-foreground text-sm"
+              />
+            </div>
+          }
+
+          <!-- Form Actions -->
+          <div class="flex justify-end gap-3 pt-4 border-t border-border">
+            <a
+              routerLink="/dashboard"
+              class="px-4 py-2 border border-input rounded-lg hover:bg-accent text-sm font-semibold text-foreground select-none transition-all cursor-pointer"
+            >
+              Cancel
+            </a>
+            <button
+              type="submit"
+              [disabled]="courseForm.invalid || isSaving()"
+              class="px-5 py-2 bg-primary hover:bg-primary/90 text-primary-foreground font-bold rounded-lg shadow text-sm transition-all flex items-center gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              @if (isSaving()) {
+                <svg class="animate-spin h-4 w-4 text-primary-foreground" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Saving details...</span>
+              } @else {
+                <span>{{ courseId() ? 'Save details & Next' : 'Create Course & Next' }}</span>
+              }
+            </button>
+          </div>
+        </div>
+      </form>
+    </div>
+  }
+</div>

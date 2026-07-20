@@ -1,0 +1,161 @@
+<div
+  class="relative overflow-hidden py-12 md:py-20 flex flex-col items-center justify-center text-center"
+>
+  <!-- Decorative background elements -->
+  <div
+    class="absolute top-0 left-1/4 w-[500px] h-[500px] rounded-full bg-primary/10 blur-[120px] pointer-events-none"
+  ></div>
+  <div
+    class="absolute bottom-0 right-1/4 w-[600px] h-[600px] rounded-full bg-violet-500/10 blur-[150px] pointer-events-none"
+  ></div>
+
+  <!-- Hero Section -->
+  <div class="max-w-4xl mx-auto flex flex-col items-center z-10">
+    <div
+      class="inline-flex items-center gap-2 px-3 py-1 rounded-full border border-primary/20 bg-primary/10 text-primary text-xs font-semibold uppercase tracking-wider mb-8 animate-pulse"
+    >
+      <span class="w-1.5 h-1.5 rounded-full bg-primary"></span>
+      Next Gen Online Classroom
+    </div>
+
+    <h1 class="text-4xl md:text-6xl font-extrabold tracking-tight mb-6 leading-tight">
+      Learn, Teach, Grow with
+      <span class="bg-clip-text text-transparent bg-gradient-to-r from-primary to-violet-500"
+        >LearnNest</span
+      >
+    </h1>
+
+    <p class="text-muted-foreground text-lg md:text-xl max-w-2xl mb-12 leading-relaxed">
+      A beautiful, fluid platform for students to learn coding and instructors to share their
+      expertise. Complete with video players, study-hour trackers, and admin signoff tools.
+    </p>
+
+    <!-- Split CTAs -->
+    <div class="flex flex-col sm:flex-row gap-4 justify-center items-center w-full sm:w-auto mb-20">
+      <a
+        routerLink="/courses"
+        class="w-full sm:w-auto px-8 py-4 text-base font-semibold text-primary-foreground bg-primary hover:bg-primary/90 rounded-xl transition-all shadow-lg hover:shadow-primary/25 active:scale-95 text-center cursor-pointer"
+      >
+        Browse Catalog
+      </a>
+      <a
+        routerLink="/register"
+        class="w-full sm:w-auto px-8 py-4 text-base font-semibold text-foreground border border-input bg-card hover:bg-accent hover:text-accent-foreground rounded-xl transition-all active:scale-95 text-center cursor-pointer"
+      >
+        Start Teaching
+      </a>
+    </div>
+
+    <!-- Features Grid -->
+    <h2 class="text-3xl font-bold mb-10">Designed for Learning and Teaching</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-5xl mb-24 text-left">
+      <!-- Student Feature Card -->
+      <div
+        class="p-8 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-all"
+      >
+        <div
+          class="w-12 h-12 rounded-xl bg-primary/15 flex items-center justify-center text-primary mb-6"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253"
+            />
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold mb-3">For Students</h3>
+        <ul class="space-y-3 text-muted-foreground">
+          <li class="flex items-start gap-2">
+            <span class="text-primary font-bold">✓</span> Explore diverse courses and structured
+            syllabus curricula.
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-primary font-bold">✓</span> Watch high-quality video lessons inside an
+            interactive classroom.
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-primary font-bold">✓</span> Track study progress atomically and view
+            study analytics.
+          </li>
+        </ul>
+      </div>
+
+      <!-- Instructor Feature Card -->
+      <div
+        class="p-8 rounded-2xl border border-border bg-card shadow-sm hover:shadow-md transition-all"
+      >
+        <div
+          class="w-12 h-12 rounded-xl bg-violet-500/15 flex items-center justify-center text-violet-500 mb-6"
+        >
+          <svg
+            class="w-6 h-6"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+            stroke-width="2"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+            />
+          </svg>
+        </div>
+        <h3 class="text-xl font-bold mb-3">For Instructors</h3>
+        <ul class="space-y-3 text-muted-foreground">
+          <li class="flex items-start gap-2">
+            <span class="text-violet-500 font-bold">✓</span> Create, structure, and edit course
+            lessons and syllabus drafts.
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-violet-500 font-bold">✓</span> Manage course lifecycle and publish
+            drafts once approved.
+          </li>
+          <li class="flex items-start gap-2">
+            <span class="text-violet-500 font-bold">✓</span> Gain insight into enrolled students and
+            student feedback.
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Testimonials Section -->
+    <h2 class="text-3xl font-bold mb-10">What Our Community Says</h2>
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-8 w-full max-w-4xl">
+      <!-- Testimonial 1 -->
+      <div
+        class="p-6 rounded-2xl border border-border bg-card shadow-sm text-left flex flex-col justify-between"
+      >
+        <p class="italic text-muted-foreground mb-6">
+          "LearnNest completely transformed my coding journey. The interactive lesson checklist kept
+          me organized, and matching my study hours with real progress is super satisfying!"
+        </p>
+        <div>
+          <h4 class="font-bold text-foreground">Sarah K.</h4>
+          <span class="text-xs text-muted-foreground">Software Engineering Student</span>
+        </div>
+      </div>
+
+      <!-- Testimonial 2 -->
+      <div
+        class="p-6 rounded-2xl border border-border bg-card shadow-sm text-left flex flex-col justify-between"
+      >
+        <p class="italic text-muted-foreground mb-6">
+          "As an instructor, standard course curation software can be tedious. LearnNest makes
+          setting up curriculum drafts and tracking student reviews simple and direct."
+        </p>
+        <div>
+          <h4 class="font-bold text-foreground">Dr. James L.</h4>
+          <span class="text-xs text-muted-foreground">Computer Science Instructor</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,4 +1,11 @@
-import { IsBoolean, IsInt, IsString, Min, MinLength } from 'class-validator';
+import {
+  IsBoolean,
+  IsInt,
+  IsOptional,
+  IsString,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 export class CreateLessonDto {
   @IsString()
@@ -17,4 +24,13 @@ export class CreateLessonDto {
 
   @IsInt()
   courseId!: number;
+
+  @IsOptional()
+  @IsString()
+  videoUrl?: string;
+
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  duration?: number;
 }

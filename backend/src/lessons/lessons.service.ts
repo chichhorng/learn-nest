@@ -41,6 +41,8 @@ export class LessonsService {
         order: createLessonDto.order,
         isFree: createLessonDto.isFree,
         courseId: createLessonDto.courseId,
+        videoUrl: createLessonDto.videoUrl,
+        duration: createLessonDto.duration ?? 0,
       },
     });
   }

@@ -1,4 +1,4 @@
-import { PrismaClient, Role } from '@prisma/client';
+import { PrismaClient } from '@prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
 import { Pool } from 'pg';
 import * as bcrypt from 'bcryptjs';
@@ -21,7 +21,7 @@ async function main() {
         email: adminEmail,
         name: 'System Admin',
         password: hashedPassword,
-        role: 'admin' as unknown as Role,
+        role: 'admin',
       },
     });
     console.log('Seeded default admin user: admin@learn-nest.com / admin123');

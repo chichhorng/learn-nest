@@ -1,4 +1,12 @@
-import { Controller, Get, Post, Put, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Body,
+  UseGuards,
+  BadRequestException,
+} from '@nestjs/common';
 import { EnrollmentsService } from './enrollments.service';
 import { UpdateProgressDto } from './dto/update-progress.dto';
 import { EnrollCourseDto } from './dto/enroll-course.dto';
@@ -13,6 +21,9 @@ export class EnrollmentsController {
 
   @Post('enroll')
   enroll(@CurrentUser() user: User, @Body() enrollCourseDto: EnrollCourseDto) {
+    if (user.role === 'admin') {
+      throw new BadRequestException('Admins cannot enroll in courses');
+    }
     return this.enrollmentsService.enroll(user.id, enrollCourseDto.courseId);
   }
 
