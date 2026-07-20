@@ -8,6 +8,7 @@ import {
   Param,
   Query,
   UseGuards,
+  ParseIntPipe,
 } from '@nestjs/common';
 import { CoursesService } from './courses.service';
 import { CreateCourseDto } from './dto/create-course.dto';
@@ -29,9 +30,16 @@ export class CoursesController {
     return this.coursesService.findAll(query);
   }
 
+  @Get('my-courses')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(Role.INSTRUCTOR)
+  findInstructorCourses(@CurrentUser() user: User) {
+    return this.coursesService.findInstructorCourses(user.id);
+  }
+
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.coursesService.findOne(+id);
+  findOne(@Param('id', ParseIntPipe) id: number) {
+    return this.coursesService.findOne(id);
   }
 
   @Post()
@@ -46,16 +54,16 @@ export class CoursesController {
   @Roles(Role.INSTRUCTOR)
   update(
     @CurrentUser() user: User,
-    @Param('id') id: string,
+    @Param('id', ParseIntPipe) id: number,
     @Body() updateCourseDto: UpdateCourseDto,
   ) {
-    return this.coursesService.update(+id, updateCourseDto, user.id);
+    return this.coursesService.update(id, updateCourseDto, user.id, user.role);
   }
 
   @Delete(':id')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(Role.INSTRUCTOR)
-  remove(@CurrentUser() user: User, @Param('id') id: string) {
-    return this.coursesService.remove(+id, user.id);
+  remove(@CurrentUser() user: User, @Param('id', ParseIntPipe) id: number) {
+    return this.coursesService.remove(id, user.id, user.role);
   }
 }

@@ -1,4 +1,13 @@
-import { Controller, Get, Put, Param, Body, UseGuards } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Put,
+  Param,
+  Body,
+  UseGuards,
+  NotFoundException,
+  ParseIntPipe,
+} from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
@@ -7,6 +16,7 @@ import { Roles } from '../common/decorators/roles.decorator';
 import { Role } from '../common/enums/role.enum';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { User } from '@prisma/client';
+import { sanitizeUser } from '../common/types/user.types';
 
 @Controller('users')
 @UseGuards(JwtAuthGuard)
@@ -14,29 +24,36 @@ export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Get('profile')
-  getProfile(@CurrentUser() user: User) {
-    return this.usersService.findById(user.id);
+  async getProfile(@CurrentUser() user: User) {
+    const dbUser = await this.usersService.findById(user.id);
+    if (!dbUser) {
+      throw new NotFoundException('User not found');
+    }
+    return sanitizeUser(dbUser);
   }
 
   @Put('profile')
-  updateProfile(
+  async updateProfile(
     @CurrentUser() user: User,
     @Body() updateUserDto: UpdateUserDto,
   ) {
-    return this.usersService.update(user.id, updateUserDto);
+    const updated = await this.usersService.update(user.id, updateUserDto);
+    return sanitizeUser(updated);
   }
 
   @Get('pending-instructors')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
-  getPendingInstructors() {
-    return this.usersService.findPendingInstructors();
+  async getPendingInstructors() {
+    const pending = await this.usersService.findPendingInstructors();
+    return pending.map(sanitizeUser);
   }
 
   @Put(':id/approve')
   @UseGuards(RolesGuard)
   @Roles(Role.ADMIN)
-  approveInstructor(@Param('id') id: string) {
-    return this.usersService.approveInstructor(+id);
+  async approveInstructor(@Param('id', ParseIntPipe) id: number) {
+    const approved = await this.usersService.approveInstructor(id);
+    return sanitizeUser(approved);
   }
 }

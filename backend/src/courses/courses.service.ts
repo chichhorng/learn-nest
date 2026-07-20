@@ -8,6 +8,7 @@ import { CreateCourseDto } from './dto/create-course.dto';
 import { UpdateCourseDto } from './dto/update-course.dto';
 import { QueryCourseDto } from './dto/query-course.dto';
 import type { Prisma } from '@prisma/client';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class CoursesService {
@@ -20,7 +21,7 @@ export class CoursesService {
         description: createCourseDto.description,
         category: createCourseDto.category,
         level: createCourseDto.level,
-        price: Number(createCourseDto.price),
+        price: createCourseDto.price,
         instructorId: instructorId,
       },
     });
@@ -30,7 +31,9 @@ export class CoursesService {
     const { search, category, level, sort, page = 1, limit = 10 } = query;
     const skip = (page - 1) * limit;
 
-    const where: Prisma.CourseWhereInput = {};
+    const where: Prisma.CourseWhereInput = {
+      status: 'published',
+    };
 
     if (search) {
       where.OR = [
@@ -64,23 +67,41 @@ export class CoursesService {
       }
     }
 
-    return this.prisma.course.findMany({
-      where,
-      orderBy,
-      skip: Number(skip),
-      take: Number(limit),
-      include: {
-        instructor: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            avatar: true,
+    const [items, total] = await Promise.all([
+      this.prisma.course.findMany({
+        where,
+        orderBy,
+        skip,
+        take: limit,
+        include: {
+          instructor: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              avatar: true,
+            },
+          },
+          lessons: {
+            select: {
+              id: true,
+              title: true,
+              duration: true,
+              isFree: true,
+              order: true,
+            },
           },
         },
-        lessons: true,
-      },
-    });
+      }),
+      this.prisma.course.count({ where }),
+    ]);
+
+    return {
+      items,
+      total,
+      page,
+      limit,
+    };
   }
 
   async findOne(id: number) {
@@ -108,30 +129,39 @@ export class CoursesService {
     return course;
   }
 
-  async update(
-    id: number,
-    updateCourseDto: UpdateCourseDto,
-    instructorId?: number,
-  ) {
-    const course = await this.findOne(id);
-    if (instructorId && course.instructorId !== instructorId) {
-      throw new ForbiddenException('You do not own this course');
-    }
-    return this.prisma.course.update({
-      where: { id },
-      data: {
-        ...updateCourseDto,
-        price:
-          updateCourseDto.price !== undefined
-            ? Number(updateCourseDto.price)
-            : undefined,
+  async findInstructorCourses(instructorId: number) {
+    return this.prisma.course.findMany({
+      where: { instructorId },
+      orderBy: { createdAt: 'desc' },
+      include: {
+        lessons: {
+          orderBy: {
+            order: 'asc',
+          },
+        },
       },
     });
   }
 
-  async remove(id: number, instructorId?: number) {
+  async update(
+    id: number,
+    updateCourseDto: UpdateCourseDto,
+    userId: number,
+    userRole: string,
+  ) {
     const course = await this.findOne(id);
-    if (instructorId && course.instructorId !== instructorId) {
+    if (userRole !== (Role.ADMIN as string) && course.instructorId !== userId) {
+      throw new ForbiddenException('You do not own this course');
+    }
+    return this.prisma.course.update({
+      where: { id },
+      data: updateCourseDto,
+    });
+  }
+
+  async remove(id: number, userId: number, userRole: string) {
+    const course = await this.findOne(id);
+    if (userRole !== (Role.ADMIN as string) && course.instructorId !== userId) {
       throw new ForbiddenException('You do not own this course');
     }
     return this.prisma.course.delete({

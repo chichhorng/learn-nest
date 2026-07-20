@@ -28,7 +28,7 @@ export class UsersService {
         avatar: data.avatar,
         bio: data.bio,
         isApproved,
-      } as never,
+      },
     });
   }
 
@@ -56,14 +56,14 @@ export class UsersService {
       where: {
         role: Role.INSTRUCTOR,
         isApproved: false,
-      } as never,
+      },
     });
   }
 
   async approveInstructor(id: number): Promise<User> {
     return this.prisma.user.update({
       where: { id },
-      data: { isApproved: true } as never,
+      data: { isApproved: true },
     });
   }
 }

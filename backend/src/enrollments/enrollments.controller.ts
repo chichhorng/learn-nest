@@ -1,6 +1,7 @@
 import { Controller, Get, Post, Put, Body, UseGuards } from '@nestjs/common';
 import { EnrollmentsService } from './enrollments.service';
 import { UpdateProgressDto } from './dto/update-progress.dto';
+import { EnrollCourseDto } from './dto/enroll-course.dto';
 import { JwtAuthGuard } from '../common/guards/jwt-auth.guard';
 import { CurrentUser } from '../common/decorators/current-user.decorator';
 import type { User } from '@prisma/client';
@@ -11,8 +12,8 @@ export class EnrollmentsController {
   constructor(private readonly enrollmentsService: EnrollmentsService) {}
 
   @Post('enroll')
-  enroll(@CurrentUser() user: User, @Body('courseId') courseId: number) {
-    return this.enrollmentsService.enroll(user.id, courseId);
+  enroll(@CurrentUser() user: User, @Body() enrollCourseDto: EnrollCourseDto) {
+    return this.enrollmentsService.enroll(user.id, enrollCourseDto.courseId);
   }
 
   @Get('my-courses')

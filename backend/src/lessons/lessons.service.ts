@@ -6,72 +6,101 @@ import {
 import { PrismaService } from '../lib/database/prisma.service';
 import { CreateLessonDto } from './dto/create-lesson.dto';
 import { UpdateLessonDto } from './dto/update-lesson.dto';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class LessonsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async checkCourseOwnership(courseId: number, instructorId: number) {
+  async checkCourseOwnership(
+    courseId: number,
+    userId: number,
+    userRole: string,
+  ) {
     const course = await this.prisma.course.findUnique({
       where: { id: courseId },
     });
     if (!course) {
       throw new NotFoundException(`Course with ID ${courseId} not found`);
     }
-    if (course.instructorId !== instructorId) {
+    if (userRole !== (Role.ADMIN as string) && course.instructorId !== userId) {
       throw new ForbiddenException('You do not own this course');
     }
   }
 
-  async create(createLessonDto: CreateLessonDto, instructorId: number) {
-    await this.checkCourseOwnership(createLessonDto.courseId, instructorId);
+  async create(
+    createLessonDto: CreateLessonDto,
+    userId: number,
+    userRole: string,
+  ) {
+    await this.checkCourseOwnership(createLessonDto.courseId, userId, userRole);
     return this.prisma.lesson.create({
       data: {
         title: createLessonDto.title,
         content: createLessonDto.content,
-        order: Number(createLessonDto.order),
-        isFree: Boolean(createLessonDto.isFree),
+        order: createLessonDto.order,
+        isFree: createLessonDto.isFree,
         courseId: createLessonDto.courseId,
       },
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: number, userId?: number, userRole?: string) {
     const lesson = await this.prisma.lesson.findUnique({
       where: { id },
+      include: {
+        course: true,
+      },
     });
     if (!lesson) {
       throw new NotFoundException(`Lesson with ID ${id} not found`);
     }
-    return lesson;
+
+    if (!lesson.isFree) {
+      if (!userId) {
+        throw new ForbiddenException(
+          'You must be enrolled to view this lesson',
+        );
+      }
+      const isAdmin = userRole === (Role.ADMIN as string);
+      const isInstructor = lesson.course.instructorId === userId;
+
+      if (!isAdmin && !isInstructor) {
+        const enrollment = await this.prisma.enrollment.findUnique({
+          where: {
+            userId_courseId: { userId, courseId: lesson.courseId },
+          },
+        });
+        if (!enrollment) {
+          throw new ForbiddenException(
+            'You must be enrolled to view this lesson',
+          );
+        }
+      }
+    }
+
+    const lessonData = { ...lesson };
+    delete (lessonData as Partial<typeof lesson>).course;
+    return lessonData;
   }
 
   async update(
     id: number,
     updateLessonDto: UpdateLessonDto,
-    instructorId: number,
+    userId: number,
+    userRole: string,
   ) {
-    const lesson = await this.findOne(id);
-    await this.checkCourseOwnership(lesson.courseId, instructorId);
+    const lesson = await this.findOne(id, userId, userRole);
+    await this.checkCourseOwnership(lesson.courseId, userId, userRole);
     return this.prisma.lesson.update({
       where: { id },
-      data: {
-        ...updateLessonDto,
-        order:
-          updateLessonDto.order !== undefined
-            ? Number(updateLessonDto.order)
-            : undefined,
-        isFree:
-          updateLessonDto.isFree !== undefined
-            ? Boolean(updateLessonDto.isFree)
-            : undefined,
-      },
+      data: updateLessonDto,
     });
   }
 
-  async remove(id: number, instructorId: number) {
-    const lesson = await this.findOne(id);
-    await this.checkCourseOwnership(lesson.courseId, instructorId);
+  async remove(id: number, userId: number, userRole: string) {
+    const lesson = await this.findOne(id, userId, userRole);
+    await this.checkCourseOwnership(lesson.courseId, userId, userRole);
     return this.prisma.lesson.delete({
       where: { id },
     });

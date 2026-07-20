@@ -57,28 +57,44 @@ export class DashboardService {
       },
     });
 
-    let totalCompletedLessons = 0;
+    const completedLessonIds: number[] = [];
     for (const enrollment of enrollments) {
+      let list: number[] = [];
       if (Array.isArray(enrollment.completedLessons)) {
-        totalCompletedLessons += enrollment.completedLessons.length;
+        list = enrollment.completedLessons as number[];
       } else if (
         enrollment.completedLessons &&
         typeof enrollment.completedLessons === 'string'
       ) {
         try {
-          const completedList = JSON.parse(
-            enrollment.completedLessons,
-          ) as unknown;
-          if (Array.isArray(completedList)) {
-            totalCompletedLessons += completedList.length;
+          const parsed = JSON.parse(enrollment.completedLessons) as unknown;
+          if (Array.isArray(parsed)) {
+            list = parsed as number[];
           }
         } catch {
           // ignore
         }
       }
+      for (const id of list) {
+        completedLessonIds.push(Number(id));
+      }
     }
 
-    const studyHours = totalCompletedLessons * 0.5; // assumption: 30 minutes per lesson
+    let studyHours = 0;
+    if (completedLessonIds.length > 0) {
+      const lessons = await this.prisma.lesson.findMany({
+        where: {
+          id: {
+            in: completedLessonIds,
+          },
+        },
+        select: {
+          duration: true,
+        },
+      });
+      const totalMinutes = lessons.reduce((sum, l) => sum + l.duration, 0);
+      studyHours = Number((totalMinutes / 60).toFixed(2));
+    }
 
     return {
       enrolledCoursesCount,
