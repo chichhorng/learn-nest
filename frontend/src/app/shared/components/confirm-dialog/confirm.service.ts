@@ -29,8 +29,9 @@ export class ConfirmService {
     this.isOpen.set(true);
     this.confirmSubject = new Subject<boolean>();
     return new Promise<boolean>((resolve) => {
-      this.confirmSubject.subscribe((result) => {
+      const sub = this.confirmSubject.subscribe((result) => {
         resolve(result);
+        sub.unsubscribe();
       });
     });
   }

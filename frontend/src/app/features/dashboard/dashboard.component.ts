@@ -1,6 +1,8 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
+import { forkJoin } from 'rxjs';
 import { AuthService } from '../../core/services/auth.service';
 import { DashboardService } from '../../core/services/dashboard.service';
 import { EnrollmentService } from '../../core/services/enrollment.service';
@@ -18,6 +20,7 @@ import { EmptyStateComponent } from '../../shared/components/empty-state/empty-s
   templateUrl: './dashboard.component.html'
 })
 export class DashboardComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   readonly userRole = computed(() => this.authService.currentUser()?.role);
 
   // Student signals
@@ -52,28 +55,28 @@ export class DashboardComponent implements OnInit {
     }
 
     if (role === 'student') {
-      this.dashboardService.getStudentStats().subscribe({
-        next: (stats) => {
+      forkJoin([
+        this.dashboardService.getStudentStats(),
+        this.enrollmentService.getMyCourses()
+      ]).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        next: ([stats, courses]) => {
           this.studentStats.set(stats);
-        }
-      });
-
-      this.enrollmentService.getMyCourses().subscribe({
-        next: (courses) => {
           this.studentCourses.set(courses);
           this.isLoading.set(false);
         },
         error: () => this.isLoading.set(false)
       });
     } else if (role === 'instructor') {
-      this.dashboardService.getInstructorStats().subscribe({
-        next: (stats) => {
+      forkJoin([
+        this.dashboardService.getInstructorStats(),
+        this.courseService.getInstructorCourses()
+      ]).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
+        next: ([stats, courses]) => {
           this.instructorStats.set(stats);
-        }
-      });
-
-      this.courseService.getInstructorCourses().subscribe({
-        next: (courses) => {
           this.instructorCourses.set(courses);
           this.isLoading.set(false);
         },

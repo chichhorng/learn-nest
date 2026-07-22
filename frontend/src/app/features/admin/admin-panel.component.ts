@@ -1,4 +1,5 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { DatePipe } from '@angular/common';
 import { UserService } from '../../core/services/user.service';
 import { AuthService } from '../../core/services/auth.service';
@@ -12,6 +13,7 @@ import { ConfirmService } from '../../shared/components/confirm-dialog/confirm.s
   templateUrl: './admin-panel.component.html'
 })
 export class AdminPanelComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   readonly activeTab = signal<'activations' | 'users'>('activations');
   readonly pendingInstructors = signal<SafeUser[]>([]);
   readonly allUsers = signal<SafeUser[]>([]);
@@ -43,7 +45,9 @@ export class AdminPanelComponent implements OnInit {
 
   loadPending(): void {
     this.isLoading.set(true);
-    this.userService.getPendingInstructors().subscribe({
+    this.userService.getPendingInstructors().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (instructors) => {
         this.pendingInstructors.set(instructors);
         this.isLoading.set(false);
@@ -55,7 +59,9 @@ export class AdminPanelComponent implements OnInit {
   }
 
   loadAllUsers(): void {
-    this.userService.getAllUsers().subscribe({
+    this.userService.getAllUsers().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (users) => {
         this.allUsers.set(users);
       }
@@ -73,7 +79,9 @@ export class AdminPanelComponent implements OnInit {
 
   approve(id: number): void {
     this.approvingId.set(id);
-    this.userService.approveInstructor(id).subscribe({
+    this.userService.approveInstructor(id).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: () => {
         this.pendingInstructors.update(list => list.filter(u => u.id !== id));
         this.allUsers.update(list => list.map(u => u.id === id ? { ...u, isApproved: true } : u));
@@ -98,7 +106,9 @@ export class AdminPanelComponent implements OnInit {
     }
 
     this.deletingId.set(id);
-    this.userService.deleteUser(id).subscribe({
+    this.userService.deleteUser(id).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: () => {
         this.allUsers.update(list => list.filter(u => u.id !== id));
         this.pendingInstructors.update(list => list.filter(u => u.id !== id));

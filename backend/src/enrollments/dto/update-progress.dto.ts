@@ -1,4 +1,4 @@
-import { IsBoolean, IsInt } from 'class-validator';
+import { IsBoolean, IsInt, IsOptional } from 'class-validator';
 
 export class UpdateProgressDto {
   @IsInt()
@@ -6,4 +6,8 @@ export class UpdateProgressDto {
 
   @IsBoolean()
   completed!: boolean;
+
+  @IsInt()
+  @IsOptional()
+  courseId?: number;
 }

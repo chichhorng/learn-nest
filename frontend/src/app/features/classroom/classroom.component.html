@@ -39,11 +39,25 @@
           @if (currentLesson(); as lesson) {
             @if (lesson.videoUrl) {
               <div class="relative w-full aspect-video rounded-xl overflow-hidden bg-black border border-border shadow-md">
-                <video
-                  [src]="lesson.videoUrl"
-                  controls
-                  class="w-full h-full object-contain"
-                ></video>
+                @if (isYouTubeVideo()) {
+                  <iframe
+                    id="youtube-player"
+                    [src]="safeYouTubeUrl()"
+                    (load)="onIframeLoad($event)"
+                    class="w-full h-full"
+                    frameborder="0"
+                    allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                    allowfullscreen
+                  ></iframe>
+                } @else {
+                  <video
+                    [src]="lesson.videoUrl"
+                    controls
+                    (ended)="onVideoEnded()"
+                    (timeupdate)="onVideoTimeUpdate($event)"
+                    class="w-full h-full object-contain"
+                  ></video>
+                }
               </div>
             } @else {
               <!-- Video Placeholder -->
@@ -97,7 +111,7 @@
                     type="checkbox"
                     [checked]="isLessonCompleted(lesson.id)"
                     (change)="toggleLessonCompletion(lesson.id, $event)"
-                    [disabled]="isProgressUpdating()"
+                    [disabled]="isProgressUpdating() || !enrollment()"
                     class="w-4 h-4 text-primary bg-background border-input rounded focus:ring-primary cursor-pointer disabled:opacity-50"
                   />
                   <!-- Clicking title switches active lesson -->

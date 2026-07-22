@@ -1,4 +1,4 @@
-import { Component, input } from '@angular/core';
+import { Component, input, computed } from '@angular/core';
 
 @Component({
   selector: 'app-stats-card',
@@ -23,11 +23,11 @@ export class StatsCardComponent {
   readonly value = input.required<string | number | null>();
   readonly color = input<'primary' | 'emerald' | 'amber'>('primary');
 
-  readonly iconBgClass = () => {
+  readonly iconBgClass = computed(() => {
     switch (this.color()) {
       case 'emerald': return 'bg-emerald-500/10 text-emerald-500';
       case 'amber': return 'bg-amber-500/10 text-amber-500';
       default: return 'bg-primary/10 text-primary';
     }
-  };
+  });
 }

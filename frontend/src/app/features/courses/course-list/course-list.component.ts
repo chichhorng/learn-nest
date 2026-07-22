@@ -64,7 +64,9 @@ export class CourseListComponent implements OnInit {
       sort: this.sort(),
       page: this.page(),
       limit: this.limit()
-    }).subscribe({
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (res) => {
         this.courses.set(res.items);
         this.totalCourses.set(res.total);

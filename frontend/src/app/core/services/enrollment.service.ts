@@ -21,6 +21,6 @@ export class EnrollmentService {
   }
 
   updateProgress(courseId: number, lessonId: number, completed: boolean): Observable<Enrollment> {
-    return this.http.put<Enrollment>(`${this.apiUrl}/progress`, { courseId, lessonId, completed });
+    return this.http.put<Enrollment>(`${this.apiUrl}/progress`, { lessonId, completed });
   }
 }

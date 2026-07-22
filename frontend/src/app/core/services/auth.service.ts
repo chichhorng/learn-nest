@@ -5,6 +5,18 @@ import { Observable, tap, catchError, of } from 'rxjs';
 import { SafeUser } from '../models/user.model';
 import { environment } from '../../../environments/environment';
 
+export interface LoginCredentials {
+  email?: string;
+  password?: string;
+}
+
+export interface RegisterDetails {
+  email?: string;
+  password?: string;
+  name?: string;
+  role?: 'student' | 'instructor' | 'admin';
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -35,7 +47,7 @@ export class AuthService {
     );
   }
 
-  login(credentials: any): Observable<{ user: SafeUser; token: string }> {
+  login(credentials: LoginCredentials): Observable<{ user: SafeUser; token: string }> {
     return this.http.post<{ user: SafeUser; token: string }>(`${this.apiUrl}/login`, credentials).pipe(
       tap(res => {
         localStorage.setItem('auth_token', res.token);
@@ -44,7 +56,7 @@ export class AuthService {
     );
   }
 
-  register(details: any): Observable<{ user: SafeUser; token: string }> {
+  register(details: RegisterDetails): Observable<{ user: SafeUser; token: string }> {
     return this.http.post<{ user: SafeUser; token: string }>(`${this.apiUrl}/register`, details).pipe(
       tap(res => {
         if (res.user.role === 'instructor' && !res.user.isApproved) {

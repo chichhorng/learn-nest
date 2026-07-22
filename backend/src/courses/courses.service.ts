@@ -121,6 +121,20 @@ export class CoursesService {
             order: 'asc',
           },
         },
+        reviews: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                name: true,
+                avatar: true,
+              },
+            },
+          },
+          orderBy: {
+            createdAt: 'desc',
+          },
+        },
       },
     });
     if (!course) {

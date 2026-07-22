@@ -7,7 +7,7 @@ import { AuthService } from '../services/auth.service';
  * By the time this guard runs, APP_INITIALIZER has already resolved the
  * user from the stored token, so currentUser() is reliable.
  */
-export const authGuard: CanActivateFn = () => {
+export const authGuard: CanActivateFn = (route, state) => {
   const authService = inject(AuthService);
   const router = inject(Router);
 
@@ -15,6 +15,6 @@ export const authGuard: CanActivateFn = () => {
     return true;
   }
 
-  router.navigate(['/login']);
+  router.navigate(['/login'], { queryParams: { returnUrl: state.url } });
   return false;
 };

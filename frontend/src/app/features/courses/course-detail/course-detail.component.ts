@@ -1,4 +1,5 @@
-import { Component, OnInit, signal, computed } from '@angular/core';
+import { Component, OnInit, signal, computed, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { DecimalPipe } from '@angular/common';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -16,6 +17,7 @@ import { StarRatingComponent } from '../../../shared/components/star-rating/star
   templateUrl: './course-detail.component.html'
 })
 export class CourseDetailComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   readonly course = signal<Course | null>(null);
   readonly isEnrolled = signal(false);
   readonly isLoading = signal(true);
@@ -55,7 +57,9 @@ export class CourseDetailComponent implements OnInit {
 
   private loadCourseDetails(courseId: number): void {
     this.isLoading.set(true);
-    this.courseService.findOne(courseId).subscribe({
+    this.courseService.findOne(courseId).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (course) => {
         this.course.set(course);
         this.checkEnrollmentStatus(courseId);
@@ -73,7 +77,9 @@ export class CourseDetailComponent implements OnInit {
       return;
     }
 
-    this.enrollmentService.getMyCourses().subscribe({
+    this.enrollmentService.getMyCourses().pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (enrollments) => {
         const enrolled = enrollments.some(e => e.courseId === courseId);
         this.isEnrolled.set(enrolled);
@@ -101,7 +107,9 @@ export class CourseDetailComponent implements OnInit {
     }
 
     this.isEnrolling.set(true);
-    this.enrollmentService.enroll(courseData.id).subscribe({
+    this.enrollmentService.enroll(courseData.id).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: () => {
         this.isEnrolling.set(false);
         this.router.navigate(['/classroom', courseData.id]);
@@ -117,9 +125,14 @@ export class CourseDetailComponent implements OnInit {
     if (!courseData) return;
 
     this.isUpdatingStatus.set(true);
-    this.courseService.update(courseData.id, { status }).subscribe({
+    this.courseService.update(courseData.id, { status }).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (updated) => {
-        this.course.set(updated);
+        this.course.set({
+          ...courseData,
+          ...updated
+        });
         this.isUpdatingStatus.set(false);
       },
       error: () => {
@@ -139,7 +152,9 @@ export class CourseDetailComponent implements OnInit {
       rating: formVal.rating,
       comment: formVal.comment,
       courseId: courseData.id
-    }).subscribe({
+    }).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (newReview) => {
         const currentUser = this.authService.currentUser();
         const reviewWithUser = {

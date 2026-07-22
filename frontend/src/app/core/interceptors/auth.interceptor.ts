@@ -3,6 +3,7 @@ import { inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { catchError, map, throwError } from 'rxjs';
 import { AuthService } from '../services/auth.service';
+import { ToastService } from '../services/toast.service';
 
 export const authInterceptor: HttpInterceptorFn = (req, next) => {
   const token = localStorage.getItem('auth_token');
@@ -18,6 +19,7 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
 
   const authService = inject(AuthService);
   const router = inject(Router);
+  const toastService = inject(ToastService);
 
   return next(authReq).pipe(
     map(event => {
@@ -30,6 +32,11 @@ export const authInterceptor: HttpInterceptorFn = (req, next) => {
       if (error.status === 401 && !req.url.includes('/auth/me')) {
         authService.clearSession();
         router.navigate(['/login']);
+        toastService.warning('Session expired. Please log in again.');
+      } else if (error.status === 0) {
+        toastService.error('Unable to connect to server. Please check your connection.');
+      } else if (error.status >= 500) {
+        toastService.error('Server error encountered. Please try again later.');
       }
       return throwError(() => error);
     })

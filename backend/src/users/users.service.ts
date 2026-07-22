@@ -93,6 +93,22 @@ export class UsersService {
       });
     }
 
+    // Get all enrollments of the user before deleting them to update course counts
+    const enrollments = await this.prisma.enrollment.findMany({
+      where: { userId: id },
+    });
+    const courseIdsWithChangedEnrollments = Array.from(
+      new Set(enrollments.map((e) => e.courseId)),
+    );
+
+    // Get all reviews of the user before deleting them to update course ratings
+    const reviews = await this.prisma.review.findMany({
+      where: { userId: id },
+    });
+    const courseIdsWithChangedReviews = Array.from(
+      new Set(reviews.map((r) => r.courseId)),
+    );
+
     await this.prisma.enrollment.deleteMany({
       where: { userId: id },
     });
@@ -100,6 +116,29 @@ export class UsersService {
     await this.prisma.review.deleteMany({
       where: { userId: id },
     });
+
+    // Update enrollCount for affected courses
+    for (const courseId of courseIdsWithChangedEnrollments) {
+      const activeEnrollCount = await this.prisma.enrollment.count({
+        where: { courseId },
+      });
+      await this.prisma.course.update({
+        where: { id: courseId },
+        data: { enrollCount: activeEnrollCount },
+      });
+    }
+
+    // Update avgRating for affected courses
+    for (const courseId of courseIdsWithChangedReviews) {
+      const aggregate = await this.prisma.review.aggregate({
+        where: { courseId },
+        _avg: { rating: true },
+      });
+      await this.prisma.course.update({
+        where: { id: courseId },
+        data: { avgRating: aggregate._avg.rating || 0 },
+      });
+    }
 
     return this.prisma.user.delete({
       where: { id },

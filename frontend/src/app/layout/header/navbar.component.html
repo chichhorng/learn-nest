@@ -1,39 +1,84 @@
-<header class="bg-card border-b border-border h-16 w-full px-8 flex items-center justify-between sticky top-0 z-50 transition-all duration-300">
-  <!-- Left: Brand Logo -->
-  <a [routerLink]="authService.isLoggedIn() ? '/dashboard' : '/'" class="flex items-center gap-3 group">
-    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-violet-400 flex items-center justify-center shadow-lg shadow-primary/25">
-      <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
-      </svg>
-    </div>
-    <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-violet-500 tracking-tight">LearnNest</span>
-  </a>
+<header class="bg-card border-b border-border min-h-16 w-full px-4 sm:px-8 sticky top-0 z-50 transition-all duration-300">
+  <div class="h-16 flex items-center justify-between">
+    <!-- Left: Brand Logo -->
+    <a [routerLink]="authService.isLoggedIn() ? '/dashboard' : '/'" (click)="closeMobileMenu()" class="flex items-center gap-3 group">
+      <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-primary to-violet-400 flex items-center justify-center shadow-lg shadow-primary/25">
+        <svg class="w-5 h-5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253" />
+        </svg>
+      </div>
+      <span class="text-xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-primary to-violet-500 tracking-tight">LearnNest</span>
+    </a>
 
-  <!-- Right: Dynamic Links based on state and role -->
-  <nav class="flex items-center gap-6">
-    @if (!authService.isLoggedIn()) {
-      <!-- Logged Out -->
-      <a routerLink="/courses" routerLinkActive="text-primary font-bold" [routerLinkActiveOptions]="{exact: true}" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Courses</a>
-      <a routerLink="/login" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Login</a>
-      <a routerLink="/register" class="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-all shadow-sm">Get Started</a>
-    } @else {
-      <!-- Logged In -->
-      @if (authService.userRole() === 'student') {
-        <a routerLink="/dashboard" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Dashboard</a>
-        <a routerLink="/courses" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Browse Courses</a>
-      } @else if (authService.userRole() === 'instructor') {
-        <a routerLink="/dashboard" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Instructor Dashboard</a>
-        <a routerLink="/courses/create" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Create Course</a>
-      } @else if (authService.userRole() === 'admin') {
-        <a routerLink="/admin" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Admin Panel</a>
-        <a routerLink="/courses" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Browse Courses</a>
+    <!-- Right: Desktop Nav -->
+    <nav class="hidden md:flex items-center gap-6">
+      @if (!authService.isLoggedIn()) {
+        <a routerLink="/courses" routerLinkActive="text-primary font-bold" [routerLinkActiveOptions]="{exact: true}" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Courses</a>
+        <a routerLink="/login" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Login</a>
+        <a routerLink="/register" class="px-4 py-2 text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-all shadow-sm">Get Started</a>
+      } @else {
+        @if (authService.userRole() === 'student') {
+          <a routerLink="/dashboard" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Dashboard</a>
+          <a routerLink="/courses" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Browse Courses</a>
+        } @else if (authService.userRole() === 'instructor') {
+          <a routerLink="/dashboard" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Instructor Dashboard</a>
+          <a routerLink="/courses/create" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Create Course</a>
+        } @else if (authService.userRole() === 'admin') {
+          <a routerLink="/admin" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Admin Panel</a>
+          <a routerLink="/courses" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Browse Courses</a>
+        }
+        
+        <a routerLink="/profile" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Profile</a>
+        
+        <button (click)="logout()" class="px-4 py-2 text-sm font-medium text-destructive border border-destructive/20 hover:bg-destructive/10 rounded-lg transition-all cursor-pointer">
+          Logout
+        </button>
       }
-      
-      <a routerLink="/profile" routerLinkActive="text-primary font-bold" class="text-sm font-medium text-muted-foreground hover:text-foreground transition-colors">Profile</a>
-      
-      <button (click)="logout()" class="px-4 py-2 text-sm font-medium text-destructive border border-destructive/20 hover:bg-destructive/10 rounded-lg transition-all cursor-pointer">
-        Logout
-      </button>
-    }
-  </nav>
+    </nav>
+
+    <!-- Mobile Hamburger Toggle -->
+    <button
+      (click)="toggleMobileMenu()"
+      class="md:hidden p-2 text-muted-foreground hover:text-foreground focus:outline-none cursor-pointer"
+      aria-label="Toggle navigation menu"
+    >
+      @if (isMobileMenuOpen()) {
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+        </svg>
+      } @else {
+        <svg class="w-6 h-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M4 6h16M4 12h16M4 18h16" />
+        </svg>
+      }
+    </button>
+  </div>
+
+  <!-- Mobile Collapsible Menu -->
+  @if (isMobileMenuOpen()) {
+    <div class="md:hidden py-4 border-t border-border flex flex-col gap-3">
+      @if (!authService.isLoggedIn()) {
+        <a routerLink="/courses" (click)="closeMobileMenu()" routerLinkActive="text-primary font-bold" class="py-2 text-sm font-medium text-muted-foreground hover:text-foreground">Courses</a>
+        <a routerLink="/login" (click)="closeMobileMenu()" routerLinkActive="text-primary font-bold" class="py-2 text-sm font-medium text-muted-foreground hover:text-foreground">Login</a>
+        <a routerLink="/register" (click)="closeMobileMenu()" class="py-2.5 px-4 text-center text-sm font-medium text-primary-foreground bg-primary hover:bg-primary/90 rounded-lg transition-all shadow-sm">Get Started</a>
+      } @else {
+        @if (authService.userRole() === 'student') {
+          <a routerLink="/dashboard" (click)="closeMobileMenu()" routerLinkActive="text-primary font-bold" class="py-2 text-sm font-medium text-muted-foreground hover:text-foreground">Dashboard</a>
+          <a routerLink="/courses" (click)="closeMobileMenu()" routerLinkActive="text-primary font-bold" class="py-2 text-sm font-medium text-muted-foreground hover:text-foreground">Browse Courses</a>
+        } @else if (authService.userRole() === 'instructor') {
+          <a routerLink="/dashboard" (click)="closeMobileMenu()" routerLinkActive="text-primary font-bold" class="py-2 text-sm font-medium text-muted-foreground hover:text-foreground">Instructor Dashboard</a>
+          <a routerLink="/courses/create" (click)="closeMobileMenu()" routerLinkActive="text-primary font-bold" class="py-2 text-sm font-medium text-muted-foreground hover:text-foreground">Create Course</a>
+        } @else if (authService.userRole() === 'admin') {
+          <a routerLink="/admin" (click)="closeMobileMenu()" routerLinkActive="text-primary font-bold" class="py-2 text-sm font-medium text-muted-foreground hover:text-foreground">Admin Panel</a>
+          <a routerLink="/courses" (click)="closeMobileMenu()" routerLinkActive="text-primary font-bold" class="py-2 text-sm font-medium text-muted-foreground hover:text-foreground">Browse Courses</a>
+        }
+
+        <a routerLink="/profile" (click)="closeMobileMenu()" routerLinkActive="text-primary font-bold" class="py-2 text-sm font-medium text-muted-foreground hover:text-foreground">Profile</a>
+
+        <button (click)="logout()" class="py-2.5 px-4 text-sm font-medium text-destructive border border-destructive/20 hover:bg-destructive/10 rounded-lg text-left transition-all cursor-pointer">
+          Logout
+        </button>
+      }
+    </div>
+  }
 </header>

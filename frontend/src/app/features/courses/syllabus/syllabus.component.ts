@@ -1,4 +1,5 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CourseService } from '../../../core/services/course.service';
@@ -14,6 +15,7 @@ import { ConfirmService } from '../../../shared/components/confirm-dialog/confir
   styleUrl: './syllabus.component.css'
 })
 export class SyllabusComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
   readonly course = signal<Course | null>(null);
   readonly isLoading = signal(true);
   readonly isSaving = signal(false);
@@ -50,7 +52,9 @@ export class SyllabusComponent implements OnInit {
 
   private loadCourse(id: number): void {
     this.isLoading.set(true);
-    this.courseService.findOne(id).subscribe({
+    this.courseService.findOne(id).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (course) => {
         this.course.set(course);
         this.isLoading.set(false);
@@ -109,7 +113,9 @@ export class SyllabusComponent implements OnInit {
 
     if (activeLesson) {
       // Edit mode
-      this.lessonService.update(activeLesson.id, values).subscribe({
+      this.lessonService.update(activeLesson.id, values).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
         next: (updatedLesson) => {
           const currentLessons = courseData.lessons || [];
           const updatedLessons = currentLessons.map(l => l.id === activeLesson.id ? updatedLesson : l);
@@ -135,7 +141,9 @@ export class SyllabusComponent implements OnInit {
         courseId: courseData.id
       };
 
-      this.lessonService.create(payload).subscribe({
+      this.lessonService.create(payload).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
         next: (newLesson) => {
           const currentLessons = courseData.lessons || [];
           const updatedLessons = [...currentLessons, newLesson];
@@ -172,7 +180,9 @@ export class SyllabusComponent implements OnInit {
     const courseData = this.course();
     if (!courseData) return;
 
-    this.lessonService.remove(lessonId).subscribe({
+    this.lessonService.remove(lessonId).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: () => {
         const currentLessons = courseData.lessons || [];
         const updatedLessons = currentLessons.filter(l => l.id !== lessonId);

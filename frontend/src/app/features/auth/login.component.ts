@@ -1,6 +1,7 @@
-import { Component, signal } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { Router, RouterLink } from '@angular/router';
+import { Component, signal, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
+import { FormControl, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../core/services/auth.service';
 
 @Component({
@@ -10,20 +11,21 @@ import { AuthService } from '../../core/services/auth.service';
   templateUrl: './login.component.html'
 })
 export class LoginComponent {
-  readonly loginForm: FormGroup;
+  private readonly destroyRef = inject(DestroyRef);
+  
+  readonly loginForm = new FormGroup({
+    email: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.email] }),
+    password: new FormControl('', { nonNullable: true, validators: [Validators.required, Validators.minLength(6)] })
+  });
+
   readonly isLoading = signal(false);
   readonly errorMessage = signal<string | null>(null);
 
   constructor(
-    private readonly fb: FormBuilder,
     private readonly authService: AuthService,
-    private readonly router: Router
-  ) {
-    this.loginForm = this.fb.group({
-      email: ['', [Validators.required, Validators.email]],
-      password: ['', [Validators.required, Validators.minLength(6)]]
-    });
-  }
+    private readonly router: Router,
+    private readonly route: ActivatedRoute
+  ) {}
 
   onSubmit(): void {
     if (this.loginForm.invalid) {
@@ -34,10 +36,15 @@ export class LoginComponent {
     this.isLoading.set(true);
     this.errorMessage.set(null);
 
-    this.authService.login(this.loginForm.value).subscribe({
+    const values = this.loginForm.getRawValue();
+
+    this.authService.login(values).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: () => {
         this.isLoading.set(false);
-        this.router.navigate(['/dashboard']);
+        const returnUrl = this.route.snapshot.queryParams['returnUrl'] || '/dashboard';
+        this.router.navigateByUrl(returnUrl);
       },
       error: (err) => {
         this.isLoading.set(false);
@@ -47,8 +54,8 @@ export class LoginComponent {
     });
   }
 
-  isFieldInvalid(fieldName: string): boolean {
-    const field = this.loginForm.get(fieldName);
+  isFieldInvalid(fieldName: 'email' | 'password'): boolean {
+    const field = this.loginForm.controls[fieldName];
     return !!field && field.invalid && (field.dirty || field.touched);
   }
 }

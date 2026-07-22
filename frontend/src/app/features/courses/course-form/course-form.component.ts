@@ -1,4 +1,5 @@
-import { Component, OnInit, signal } from '@angular/core';
+import { Component, OnInit, signal, DestroyRef, inject } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormControl, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { CourseService } from '../../../core/services/course.service';
@@ -10,6 +11,8 @@ import { CourseService } from '../../../core/services/course.service';
   templateUrl: './course-form.component.html'
 })
 export class CourseFormComponent implements OnInit {
+  private readonly destroyRef = inject(DestroyRef);
+
   readonly isSaving = signal(false);
   readonly isLoading = signal(false);
   readonly courseId = signal<number | null>(null);
@@ -46,7 +49,9 @@ export class CourseFormComponent implements OnInit {
 
   private loadCourse(id: number): void {
     this.isLoading.set(true);
-    this.courseService.findOne(id).subscribe({
+    this.courseService.findOne(id).pipe(
+      takeUntilDestroyed(this.destroyRef)
+    ).subscribe({
       next: (course) => {
         this.courseForm.patchValue({
           title: course.title,
@@ -76,7 +81,9 @@ export class CourseFormComponent implements OnInit {
     const id = this.courseId();
 
     if (id) {
-      this.courseService.update(id, values).subscribe({
+      this.courseService.update(id, values).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
         next: () => {
           this.isSaving.set(false);
           this.router.navigate(['/courses', id, 'syllabus']);
@@ -95,7 +102,9 @@ export class CourseFormComponent implements OnInit {
         price: values.price
       };
 
-      this.courseService.create(createValues).subscribe({
+      this.courseService.create(createValues).pipe(
+        takeUntilDestroyed(this.destroyRef)
+      ).subscribe({
         next: (newCourse) => {
           this.isSaving.set(false);
           this.router.navigate(['/courses', newCourse.id, 'syllabus']);
